@@ -113,7 +113,7 @@
 
     <div class="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
         <div class="mb-4">
-            <label class="block text-lg font-semibold mb-2">Vælg Turis produkt CSV</label>
+            <p class="block text-lg font-semibold mb-2">Vælg Turis produkt CSV</p>
             <div class="relative">
                 <input type="file" id="csvFileInput" accept=".csv" class="hidden" on:change={handleFileChange}>
                 <button type="button"
