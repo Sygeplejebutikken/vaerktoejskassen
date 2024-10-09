@@ -3,29 +3,50 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main  # Udskift dette med den branch, du vil deploye fra
+      - main  # Den branch, du vil deploye fra
+  workflow_dispatch:  # Tillader manuel kørsel fra Actions-tabben
+
+permissions:
+  contents: read  # Giver læseadgang til indholdet i repoet
+  pages: write    # Giver skriveadgang til GitHub Pages
+  id-token: write # Tillader brug af OIDC token
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18 # Den version af Node.js, som dit projekt kræver
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Upload artifact for deployment
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./build  # Sørg for at denne sti matcher output fra din build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write  # Giver nødvendige tilladelser til at skrive til GitHub Pages
+      id-token: write
+
+    environment:
+      name: github-pages  # Bruger GitHub Pages som miljø for deployment
+      url: ${{ steps.deployment.outputs.page_url }}  # Vil vise URL'en til det live site efter deployment
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18 # Du kan bruge den version af Node.js, som dit projekt kræver
-
-    - name: Install dependencies
-      run: npm install
-
-    - name: Build project
-      run: npm run build
-
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./build  # Sørg for, at denne mappe matcher den genererede build-mappe
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
