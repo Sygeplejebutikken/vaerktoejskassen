@@ -1,6 +1,4 @@
 <script>
-    export const prerender = true;
-
     import * as Papa from 'papaparse';
 
     let fileName = '';
