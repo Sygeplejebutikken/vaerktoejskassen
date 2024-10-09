@@ -1,6 +1,6 @@
 <script>
-    import "../app.css";
     export const prerender = true;
+    import "../app.css";
 </script>
 
 <header class="bg-blue-600 text-white py-4 shadow-md">
@@ -8,7 +8,7 @@
         <h1 class="text-2xl font-bold">Mathias' Store Værktøjskasse</h1>
         <nav>
             <ul class="flex space-x-4 mt-2">
-                <li><a href="/" class="hover:underline">Oversigt</a></li>
+                <li><a href="./" class="hover:underline">Oversigt</a></li>
                 <!-- Tilføj flere menupunkter hvis nødvendigt -->
             </ul>
         </nav>

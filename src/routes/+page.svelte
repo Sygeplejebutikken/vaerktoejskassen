@@ -14,7 +14,7 @@
                 <p class="text-gray-600 mt-2">
                     Værktøj som hjælper med at lave kataloger i Canva med data fra Turis.
                 </p>
-                <a href="/turis-til-canva"
+                <a href="./turis-til-canva"
                     class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
                     Se værktøj
                 </a>
