@@ -1,182 +1,192 @@
 <!DOCTYPE html>
 <html lang="da">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CSV Filter</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Filter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-red-100 text-gray-800">
 
-  <div class="container mx-auto py-10">
-    <h1 class="text-3xl font-bold text-center mb-5">Turis til Canva</h1>
-    
-    <div class="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
-        <div class="mb-4">
-            <label class="block text-lg font-semibold mb-2">Vælg Turis produkt CSV</label>
-            <div class="relative">
-              <input type="file" id="csvFileInput" accept=".csv" class="hidden">
-              <button type="button" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-300" 
-                      onclick="document.getElementById('csvFileInput').click();">
-                Vælg fil
-              </button>
-              <span id="fileName" class="ml-2 text-sm text-gray-600"></span>
+    <div class="container mx-auto py-10">
+        <h1 class="text-3xl font-bold text-center mb-5">Turis til Canva</h1>
+
+        <div class="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
+            <div class="mb-4">
+                <label class="block text-lg font-semibold mb-2">Vælg Turis produkt CSV</label>
+                <div class="relative">
+                    <input type="file" id="csvFileInput" accept=".csv" class="hidden">
+                    <button type="button"
+                        class="bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-300"
+                        onclick="document.getElementById('csvFileInput').click();">
+                        Vælg fil
+                    </button>
+                    <span id="fileName" class="ml-2 text-sm text-gray-600"></span>
+                </div>
             </div>
-          </div>          
 
-      <div id="dropdownContainer" class="hidden mb-4">
-        <label for="headerDropdown" class="block text-lg font-semibold mb-2">Vælg prisliste</label>
-        <select id="headerDropdown" class="block w-full border p-2 rounded-lg max-h-48 overflow-y-auto"></select>        
-      </div>
+            <div id="dropdownContainer" class="hidden mb-4">
+                <label for="headerDropdown" class="block text-lg font-semibold mb-2">Vælg prisliste</label>
+                <select id="headerDropdown"
+                    class="block w-full border p-2 rounded-lg max-h-48 overflow-y-auto"></select>
+            </div>
 
-      <button id="processButton" class="w-full bg-red-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-red-600 hidden">Generer CSV</button>
+            <button id="processButton"
+                class="w-full bg-red-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-red-600 hidden">Generer
+                CSV</button>
+        </div>
+
+        <p id="statusMessage" class="text-center mt-5"></p>
     </div>
 
-    <p id="statusMessage" class="text-center mt-5"></p>
-  </div>
+    <script>
+        document.getElementById('csvFileInput').addEventListener('change', function () {
+            const fileInput = document.getElementById('csvFileInput');
+            const fileNameDisplay = document.getElementById('fileName');
 
-  <script>
-    document.getElementById('csvFileInput').addEventListener('change', function() {
-    const fileInput = document.getElementById('csvFileInput');
-    const fileNameDisplay = document.getElementById('fileName');
-    
-    if (fileInput.files.length > 0) {
-        fileNameDisplay.textContent = fileInput.files[0].name;
-    } else {
-        fileNameDisplay.textContent = '';
-    }
-    });
-
-    let uniqueVariants = new Set();
-    let rows = [];
-
-    // Liste over headers, der skal filtreres fra
-    const excludedHeaders = [
-      'Name', 'Brand', 'Supplier', 'SKU', 'Warehouse Location', 'EAN', 'Style Number', 
-      'HS Code', 'Unit Cost', 'Variant', 'Variant Title', 'Size/Volume', 'Category', 
-      'Sub-Category', 'Groups', 'Color', 'Material', 'Dimensions', 'Unit weight', 
-      'Unit volume', 'EUR', 'DKK', 'NOK', 'SEK', 'RRP_EUR', 'RRP_DKK', 'RRP_NOK', 
-      'RRP_SEK', 'Discount Tiers', 'Stock', 'Allow Backorders', 'Purchase Requirements', 
-      'Case Quantity', 'UOM', 'Description', 'New Product', 'Images', 'Units Ordered', 
-      'Orders Count'
-    ];
-
-    function formatPrice(value) {
-      return parseFloat(value)
-        .toFixed(2)  // Sikrer to decimaler
-        .replace('.', ',')  // Erstatter decimal-punktum med komma
-        .replace(/\B(?=(\d{3})+(?!\d))/g, '.');  // Tilføjer tusind-separator (punktum)
-    }
-
-    function processCSV() {
-      const listName = document.getElementById('headerDropdown').value;
-      const fileInput = document.getElementById('csvFileInput').files[0];
-
-      if (!fileInput) {
-        alert('Vælg venligst en CSV-fil');
-        return;
-      }
-
-      Papa.parse(fileInput, {
-        header: true,
-        delimiter: ";",
-        complete: function(results) {
-          results.data.forEach(row => {
-            let priceValue = row[listName] ? row[listName].trim() : null;
-            const variantValue = row['Variant'] ? row['Variant'].trim() : null;
-
-            if (priceValue) {
-              priceValue = formatPrice(priceValue);
-
-              if (variantValue && !uniqueVariants.has(variantValue)) {
-                uniqueVariants.add(variantValue);
-
-                const filteredRow = {
-                  Name: row['Name'],
-                  Brand: row['Brand'],
-                  SKU: row['SKU'],
-                  Price: priceValue,
-                  Description: row['Description'],
-                  Images: row['Images']
-                };
-                rows.push(filteredRow);
-              }
+            if (fileInput.files.length > 0) {
+                fileNameDisplay.textContent = fileInput.files[0].name;
+            } else {
+                fileNameDisplay.textContent = '';
             }
-          });
+        });
 
-          downloadCSV(rows, listName);
-        }
-      });
-    }
+        let uniqueVariants = new Set();
+        let rows = [];
 
-    function downloadCSV(rows, listName) {
-    const csv = Papa.unparse(rows, {
-        quotes: true,
-        delimiter: ";",
-        header: true
-    });
+        // Liste over headers, der skal filtreres fra
+        const excludedHeaders = [
+            'Name', 'Brand', 'Supplier', 'SKU', 'Warehouse Location', 'EAN', 'Style Number',
+            'HS Code', 'Unit Cost', 'Variant', 'Variant Title', 'Size/Volume', 'Category',
+            'Sub-Category', 'Groups', 'Color', 'Material', 'Dimensions', 'Unit weight',
+            'Unit volume', 'EUR', 'DKK', 'NOK', 'SEK', 'RRP_EUR', 'RRP_DKK', 'RRP_NOK',
+            'RRP_SEK', 'Discount Tiers', 'Stock', 'Allow Backorders', 'Purchase Requirements',
+            'Case Quantity', 'UOM', 'Description', 'New Product', 'Images', 'Units Ordered',
+            'Orders Count'
+        ];
 
-    // Tilføj BOM for at sikre korrekt UTF-8 visning i Excel og andre programmer
-    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${listName}_canva.csv`;  // Filnavn ændret
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    document.getElementById('statusMessage').innerText = "Filtreret CSV-fil er nu klar til download!";
-}
-
-    function handleFileUpload() {
-        const fileInput = document.getElementById('csvFileInput').files[0];
-        if (!fileInput) {
-            return;
+        function formatPrice(value) {
+            return parseFloat(value)
+                .toFixed(2) // Sikrer to decimaler
+                .replace('.', ',') // Erstatter decimal-punktum med komma
+                .replace(/\B(?=(\d{3})+(?!\d))/g, '.'); // Tilføjer tusind-separator (punktum)
         }
 
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            const decoder = new TextDecoder('utf-8');
-            const csvText = decoder.decode(event.target.result);
+        function processCSV() {
+            const listName = document.getElementById('headerDropdown').value;
+            const fileInput = document.getElementById('csvFileInput').files[0];
 
-            Papa.parse(csvText, {
-            header: true,
-            delimiter: ";",
-            complete: function(results) {
-                const headers = results.meta.fields;
-                populateDropdown(headers);
-                document.getElementById('dropdownContainer').classList.remove('hidden');
-                document.getElementById('processButton').classList.remove('hidden');
-                document.getElementById('statusMessage').innerText = "Vælg en kolonne til priser fra dropdown.";
+            if (!fileInput) {
+                alert('Vælg venligst en CSV-fil');
+                return;
             }
+
+            Papa.parse(fileInput, {
+                header: true,
+                delimiter: ";",
+                complete: function (results) {
+                    results.data.forEach(row => {
+                        let priceValue = row[listName] ? row[listName].trim() : null;
+                        const variantValue = row['Variant'] ? row['Variant'].trim() : null;
+
+                        if (priceValue) {
+                            priceValue = formatPrice(priceValue);
+
+                            if (variantValue && !uniqueVariants.has(variantValue)) {
+                                uniqueVariants.add(variantValue);
+
+                                const filteredRow = {
+                                    Name: row['Name'],
+                                    Brand: row['Brand'],
+                                    SKU: row['SKU'],
+                                    Price: priceValue,
+                                    Description: row['Description'],
+                                    Images: row['Images']
+                                };
+                                rows.push(filteredRow);
+                            }
+                        }
+                    });
+
+                    downloadCSV(rows, listName);
+                }
             });
-        };
-        reader.readAsArrayBuffer(fileInput);
+        }
+
+        function downloadCSV(rows, listName) {
+            const csv = Papa.unparse(rows, {
+                quotes: true,
+                delimiter: ";",
+                header: true
+            });
+
+            // Tilføj BOM for at sikre korrekt UTF-8 visning i Excel og andre programmer
+            const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], {
+                type: 'text/csv;charset=utf-8;'
+            });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${listName}_canva.csv`; // Filnavn ændret
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            document.getElementById('statusMessage').innerText = "Filtreret CSV-fil er nu klar til download!";
+        }
+
+        function handleFileUpload() {
+            const fileInput = document.getElementById('csvFileInput').files[0];
+            if (!fileInput) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const decoder = new TextDecoder('utf-8');
+                const csvText = decoder.decode(event.target.result);
+
+                Papa.parse(csvText, {
+                    header: true,
+                    delimiter: ";",
+                    complete: function (results) {
+                        const headers = results.meta.fields;
+                        populateDropdown(headers);
+                        document.getElementById('dropdownContainer').classList.remove('hidden');
+                        document.getElementById('processButton').classList.remove('hidden');
+                        document.getElementById('statusMessage').innerText =
+                            "Vælg en kolonne til priser fra dropdown.";
+                    }
+                });
+            };
+            reader.readAsArrayBuffer(fileInput);
         }
 
 
-    function populateDropdown(headers) {
-      const dropdown = document.getElementById('headerDropdown');
-      dropdown.innerHTML = '';  // Tøm dropdown først
-      
-      headers.forEach(header => {
-        if (!excludedHeaders.includes(header)) {
-          const option = document.createElement('option');
-          option.value = header;
-          option.text = header;
-          dropdown.appendChild(option);
+        function populateDropdown(headers) {
+            const dropdown = document.getElementById('headerDropdown');
+            dropdown.innerHTML = ''; // Tøm dropdown først
+
+            headers.forEach(header => {
+                if (!excludedHeaders.includes(header)) {
+                    const option = document.createElement('option');
+                    option.value = header;
+                    option.text = header;
+                    dropdown.appendChild(option);
+                }
+            });
         }
-      });
-    }
 
-    // Event listener for file upload
-    document.getElementById('csvFileInput').addEventListener('change', handleFileUpload);
+        // Event listener for file upload
+        document.getElementById('csvFileInput').addEventListener('change', handleFileUpload);
 
-    // Event listener for process button
-    document.getElementById('processButton').addEventListener('click', processCSV);
-  </script>
+        // Event listener for process button
+        document.getElementById('processButton').addEventListener('click', processCSV);
+    </script>
 
 </body>
+
 </html>
