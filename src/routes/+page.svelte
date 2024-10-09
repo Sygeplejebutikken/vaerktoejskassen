@@ -1,35 +1,23 @@
-<!DOCTYPE html>
-<html lang="da">
+<script>
+    // Ingen specifik JavaScript-kode her endnu
+</script>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mathias' Store Værktøjskasse</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-
-<body class="bg-gray-100">
+<div class="bg-gray-100 min-h-screen">
     <div class="container mx-auto p-6">
-        <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Mathias Store Værktøjskasse</h1>
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Mathias' Store Værktøjskasse</h1>
 
-        <!-- Card -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-            <!-- Canva til Turis -->
             <div class="bg-white shadow-md rounded-lg overflow-hidden">
-                <!-- <img src="https://via.placeholder.com/400x200" alt="Canva Tool" class="w-full"> -->
+                <img src="https://placehold.co/400x200" alt="Canva Tool" class="w-full">
                 <div class="p-6">
                     <h2 class="text-xl font-semibold text-gray-800">Turis til Canva</h2>
                     <p class="text-gray-600 mt-2">Værktøj som hjælper med at lave kataloger i Canva med data fra Turis.
                     </p>
-                    <a href="turis-til-canva.html"
+                    <a href="/turis-til-canva"
                         class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Se
                         værktøj</a>
                 </div>
             </div>
-
         </div>
     </div>
-</body>
-
-</html>
+</div>
