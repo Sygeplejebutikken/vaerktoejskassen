@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main  # Skifter til den branch du vil deploye fra
+      - main  # Udskift dette med den branch, du vil deploye fra
 
 jobs:
   build:
@@ -16,7 +16,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: 20 # Du kan bruge den version af Node.js, som dit projekt kræver
+        node-version: 18 # Du kan bruge den version af Node.js, som dit projekt kræver
 
     - name: Install dependencies
       run: npm install
@@ -28,4 +28,4 @@ jobs:
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./build  # Opdater dette hvis output-mappen fra SvelteKit build er anderledes
+        publish_dir: ./build  # Sørg for, at denne mappe matcher den genererede build-mappe
