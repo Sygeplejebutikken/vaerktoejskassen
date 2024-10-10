@@ -1,4 +1,4 @@
-import adapter from '@sveltejs/adapter-static';
+import adapter from '@sveltejs/adapter-node';
 import {
 	vitePreprocess
 } from '@sveltejs/vite-plugin-svelte';
@@ -12,7 +12,7 @@ const config = {
 			fallback: null // Ingen fallback (f.eks. hvis du ikke bruger en SPA)
 		}),
 		paths: {
-			base: process.env.NODE_ENV === 'production' ? '/vaerktoejskassen' : '', // REPO-NAME er navnet på dit GitHub repo
+			base: '', // REPO-NAME er navnet på dit GitHub repo
 		}
 	},
 	preprocess: vitePreprocess()

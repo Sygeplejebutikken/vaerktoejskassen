@@ -19,6 +19,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@sveltejs/adapter-node": "^5.2.6",
 		"@sveltejs/adapter-static": "^3.0.5",
 		"papaparse": "^5.4.1"
 	}
