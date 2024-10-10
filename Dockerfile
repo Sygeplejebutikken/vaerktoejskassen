@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Installer afhængigheder (inkl. devDependencies)
-RUN npm install
+RUN npm ci
 
 # Kopier resten af projektet til builder-containeren
 COPY . .
@@ -24,7 +24,7 @@ WORKDIR /app
 
 # Installér kun nødvendige produktionsafhængigheder
 COPY --from=builder /app/package*.json ./
-RUN npm install --omit=dev
+RUN npm ci --omit=dev
 
 # Kun kopier den nødvendige 'build' mappe fra builder-containeren
 COPY --from=builder /app/build ./build
