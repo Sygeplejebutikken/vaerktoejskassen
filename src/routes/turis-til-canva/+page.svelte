@@ -9,6 +9,8 @@
     let showDropdown = false;
     let showProcessButton = false;
     let statusMessage = 'Upload CSV-fil fra Turis';
+    let progress = 0;
+    let processing = false;  // Angiver om vi er i gang med at behandle
 
     const excludedHeaders = [
         'Name', 'Brand', 'Supplier', 'SKU', 'Warehouse Location', 'EAN', 'Style Number',
@@ -24,10 +26,8 @@
         const price = parseFloat(value);
         
         if (Number.isInteger(price)) {
-            // Hvis prisen er et helt tal, formater som xx,-
             return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',-';
         } else {
-            // Hvis prisen har decimaler, behold standard format
             return price
                 .toFixed(2)
                 .replace('.', ',')
@@ -57,15 +57,37 @@
         });
     }
 
-    function processCSV() {
+    async function handleDescription(description) {
+        try {
+            const res = await fetch('/api/description', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ description })
+            });
+
+            const data = await res.json();
+            return data.reply;
+        } catch (error) {
+            console.error("Fejl i håndtering af beskrivelse:", error);
+            return "Fejl i behandling af beskrivelse.";
+        }
+    }
+
+    async function processCSV() {
         if (!selectedHeader) {
             alert('Vælg venligst en priskolonne.');
             return;
         }
 
         let processedRows = [];
+        processing = true;  // Start behandlingsprocessen
+        progress = 0;       // Sæt progress til 0
 
-        rows.forEach(row => {
+        // Brug for...of så vi kan bruge await korrekt
+        for (let i = 0; i < rows.length; i++) {
+            let row = rows[i];
             let priceValue = row[selectedHeader] ? row[selectedHeader].trim() : null;
             const variantValue = row['Variant'] ? row['Variant'].trim() : null;
 
@@ -75,20 +97,28 @@
                 if (variantValue && !uniqueVariants.has(variantValue)) {
                     uniqueVariants.add(variantValue);
 
+                    // Behandl beskrivelsen med ChatGPT, vent på svaret
+                    const processedDescription = await handleDescription(row['Description']);
+
                     const filteredRow = {
                         Name: handleTitles(row['Name']),
                         Brand: row['Brand'],
                         SKU: row['SKU'],
                         Price: priceValue,
-                        Description: row['Description'],
+                        Description: processedDescription,  // ChatGPT's svar
                         Images: handleImages(row['Images'])
                     };
                     processedRows.push(filteredRow);
                 }
             }
-        });
 
+            // Opdater progress efter hver række
+            progress = ((i + 1) / rows.length) * 100;
+        }
+
+        // Når alle rækker er behandlet, download CSV
         downloadCSV(processedRows);
+        processing = false;  // Slut behandlingsprocessen
     }
 
     function handleImages(images) {
@@ -97,10 +127,8 @@
     }
 
     function handleTitles(title) {
-        // Brug en regex til at fjerne alt fra og med det første '['
         return title.replace(/\s*\[.*$/, '');
     }
-
 
     function downloadCSV(rows) {
         const csv = Papa.unparse(rows, {
@@ -126,7 +154,6 @@
 </script>
 
 <div class="container mx-auto py-10">
-    
     <div class="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
         <h1 class="text-3xl font-bold text-center mb-5">Turis til Canva</h1>
         <div class="mb-4">
@@ -143,22 +170,31 @@
         </div>
 
         {#if showDropdown}
-      <div class="mb-4">
-        <label for="headerDropdown" class="block text-lg font-semibold mb-2">Vælg prisliste</label>
-        <select id="headerDropdown" bind:value={selectedHeader} class="block w-full border p-2 rounded-lg max-h-48 overflow-y-auto">
-          {#each headers as header}
-            <option value={header}>{header}</option>
-          {/each}
-        </select>
-      </div>
-    {/if}
+            <div class="mb-4">
+                <label for="headerDropdown" class="block text-lg font-semibold mb-2">Vælg prisliste</label>
+                <select id="headerDropdown" bind:value={selectedHeader} class="block w-full border p-2 rounded-lg max-h-48 overflow-y-auto">
+                    {#each headers as header}
+                        <option value={header}>{header}</option>
+                    {/each}
+                </select>
+            </div>
+        {/if}
 
-    {#if showDropdown}
-      <button class="w-full bg-red-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-red-600" on:click={processCSV}>
-        Generer CSV
-      </button>
-    {/if}
-  </div>
+        {#if showDropdown}
+            <button class="w-full bg-red-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-red-600" on:click={processCSV} disabled={processing}>
+                {processing ? 'Behandler...' : 'Generer CSV'}
+            </button>
+        {/if}
 
-  <p id="statusMessage" class="text-center mt-5">{statusMessage}</p>
+        {#if processing}
+            <!-- Progress bar -->
+            <div class="w-full bg-gray-200 rounded-full mt-4">
+                <div class="bg-blue-500 text-xs font-medium text-white text-center p-0.5 leading-none rounded-full" style="width: {progress}%">
+                    {progress.toFixed(0)}%
+                </div>
+            </div>
+        {/if}
+    </div>
+
+    <p id="statusMessage" class="text-center mt-5">{statusMessage}</p>
 </div>
