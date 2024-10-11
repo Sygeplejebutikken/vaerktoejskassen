@@ -76,7 +76,7 @@
                     uniqueVariants.add(variantValue);
 
                     const filteredRow = {
-                        Name: row['Name'],
+                        Name: handleTitles(row['Name']),
                         Brand: row['Brand'],
                         SKU: row['SKU'],
                         Price: priceValue,
@@ -95,6 +95,12 @@
         const imageArray = images.split('|');
         return imageArray[0];
     }
+
+    function handleTitles(title) {
+        // Brug en regex til at fjerne alt fra og med det første '['
+        return title.replace(/\s*\[.*$/, '');
+    }
+
 
     function downloadCSV(rows) {
         const csv = Papa.unparse(rows, {
