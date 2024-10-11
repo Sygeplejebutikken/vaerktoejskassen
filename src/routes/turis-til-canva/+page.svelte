@@ -10,7 +10,7 @@
     let showProcessButton = false;
     let statusMessage = 'Upload CSV-fil fra Turis';
     let progress = 0;
-    let processing = false;  // Angiver om vi er i gang med at behandle
+    let processing = false; // Angiver om vi er i gang med at behandle
 
     const excludedHeaders = [
         'Name', 'Brand', 'Supplier', 'SKU', 'Warehouse Location', 'EAN', 'Style Number',
@@ -24,7 +24,7 @@
 
     function formatPrice(value) {
         const price = parseFloat(value);
-        
+
         if (Number.isInteger(price)) {
             return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',-';
         } else {
@@ -64,7 +64,9 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ description })
+                body: JSON.stringify({
+                    description
+                })
             });
 
             const data = await res.json();
@@ -85,8 +87,8 @@
 
         let filteredRows = [];
         let processedRows = [];
-        processing = true;  // Start behandlingsprocessen
-        progress = 0;       // Sæt progress til 0
+        processing = true; // Start behandlingsprocessen
+        progress = 0; // Sæt progress til 0
 
         // Trin 1: Filtrer alle rækker, der opfylder kriterierne
         for (let i = 0; i < rows.length; i++) {
@@ -127,7 +129,7 @@
                 Brand: row.Brand,
                 SKU: row.SKU,
                 Price: row.Price,
-                Description: processedDescription,  // ChatGPT's svar
+                Description: processedDescription, // ChatGPT's svar
                 Images: handleImages(row.Images)
             };
 
@@ -139,7 +141,7 @@
 
         // Når alle rækker er behandlet, download CSV
         downloadCSV(processedRows);
-        processing = false;  // Slut behandlingsprocessen
+        processing = false; // Slut behandlingsprocessen
         statusMessage = 'Filtreret CSV-fil er nu klar til download!';
     }
 
