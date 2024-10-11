@@ -8,7 +8,7 @@
     let selectedHeader = '';
     let showDropdown = false;
     let showProcessButton = false;
-    let statusMessage = '';
+    let statusMessage = 'Upload CSV-fil fra Turis';
 
     const excludedHeaders = [
         'Name', 'Brand', 'Supplier', 'SKU', 'Warehouse Location', 'EAN', 'Style Number',
@@ -21,10 +21,18 @@
     ];
 
     function formatPrice(value) {
-        return parseFloat(value)
-            .toFixed(2)
-            .replace('.', ',')
-            .replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        const price = parseFloat(value);
+        
+        if (Number.isInteger(price)) {
+            // Hvis prisen er et helt tal, formater som xx,-
+            return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',-';
+        } else {
+            // Hvis prisen har decimaler, behold standard format
+            return price
+                .toFixed(2)
+                .replace('.', ',')
+                .replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
     }
 
     function handleFileChange(event) {
@@ -107,9 +115,9 @@
 </script>
 
 <div class="container mx-auto py-10">
-    <h1 class="text-3xl font-bold text-center mb-5">Turis til Canva</h1>
-
+    
     <div class="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
+        <h1 class="text-3xl font-bold text-center mb-5">Turis til Canva</h1>
         <div class="mb-4">
             <p class="block text-lg font-semibold mb-2">Vælg Turis produkt CSV</p>
             <div class="relative">
