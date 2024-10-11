@@ -81,7 +81,7 @@
                         SKU: row['SKU'],
                         Price: priceValue,
                         Description: row['Description'],
-                        Images: row['Images']
+                        Images: handleImages(row['Images'])
                     };
                     processedRows.push(filteredRow);
                 }
@@ -89,6 +89,11 @@
         });
 
         downloadCSV(processedRows);
+    }
+
+    function handleImages(images) {
+        const imageArray = images.split('|');
+        return imageArray[0];
     }
 
     function downloadCSV(rows) {
