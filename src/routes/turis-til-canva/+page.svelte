@@ -76,49 +76,71 @@
     }
 
     async function processCSV() {
+        statusMessage = 'Behandler CSV...';
+
         if (!selectedHeader) {
             alert('Vælg venligst en priskolonne.');
             return;
         }
 
+        let filteredRows = [];
         let processedRows = [];
         processing = true;  // Start behandlingsprocessen
         progress = 0;       // Sæt progress til 0
 
-        // Brug for...of så vi kan bruge await korrekt
+        // Trin 1: Filtrer alle rækker, der opfylder kriterierne
         for (let i = 0; i < rows.length; i++) {
+            statusMessage = `Filtrerer ${i + 1} ud af ${rows.length}`;
             let row = rows[i];
             let priceValue = row[selectedHeader] ? row[selectedHeader].trim() : null;
             const variantValue = row['Variant'] ? row['Variant'].trim() : null;
 
-            if (priceValue) {
+            if (priceValue && variantValue && !uniqueVariants.has(variantValue)) {
                 priceValue = formatPrice(priceValue);
+                uniqueVariants.add(variantValue);
 
-                if (variantValue && !uniqueVariants.has(variantValue)) {
-                    uniqueVariants.add(variantValue);
-
-                    // Behandl beskrivelsen med ChatGPT, vent på svaret
-                    const processedDescription = await handleDescription(row['Description']);
-
-                    const filteredRow = {
-                        Name: handleTitles(row['Name']),
-                        Brand: row['Brand'],
-                        SKU: row['SKU'],
-                        Price: priceValue,
-                        Description: processedDescription,  // ChatGPT's svar
-                        Images: handleImages(row['Images'])
-                    };
-                    processedRows.push(filteredRow);
-                }
+                // Push de nødvendige data til filtreret array
+                filteredRows.push({
+                    Name: row['Name'],
+                    Brand: row['Brand'],
+                    SKU: row['SKU'],
+                    Price: priceValue,
+                    Description: row['Description'],
+                    Images: row['Images']
+                });
             }
 
-            // Opdater progress efter hver række
-            progress = ((i + 1) / rows.length) * 100;
+            // Opdater progress efter filtrering
+            // progress = ((i + 1) / rows.length) * 50; // Filtrering udgør 50% af processen
+        }
+
+        // Trin 2: Behandl titler og beskrivelser efter filtreringen
+        for (let i = 0; i < filteredRows.length; i++) {
+            statusMessage = `Behandler beskrivelse ${i + 1} ud af ${filteredRows.length}`;
+            let row = filteredRows[i];
+
+            // Behandl beskrivelsen med ChatGPT, vent på svaret
+            const processedDescription = await handleDescription(row.Description);
+
+            const processedRow = {
+                Name: handleTitles(row.Name),
+                Brand: row.Brand,
+                SKU: row.SKU,
+                Price: row.Price,
+                Description: processedDescription,  // ChatGPT's svar
+                Images: handleImages(row.Images)
+            };
+
+            processedRows.push(processedRow);
+
+            // Opdater progress efter behandling af titler og beskrivelser
+            progress = ((i + 1) / filteredRows.length) * 100; // Behandling af titler udgør de resterende 50%
         }
 
         // Når alle rækker er behandlet, download CSV
         downloadCSV(processedRows);
         processing = false;  // Slut behandlingsprocessen
+        statusMessage = 'Filtreret CSV-fil er nu klar til download!';
     }
 
     function handleImages(images) {
@@ -180,19 +202,25 @@
             </div>
         {/if}
 
+        
+        {#if processing}
+
+        <!-- Progress bar -->
+        <div class="my-4">
+            <p class="italic">Chatter med ChatGPT...</p>
+            <div class="w-full bg-gray-200 rounded-full">
+                <div class="bg-blue-500 text-xs font-medium text-white text-center p-0.5 leading-none rounded-full transition-all duration-500 ease-in-out" style="width: {progress}%">
+                    {progress.toFixed(0)}%
+                </div>
+            </div>
+        </div>
+        {/if}
+
+        <!-- Generer CSV knap -->
         {#if showDropdown}
             <button class="w-full bg-red-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-red-600" on:click={processCSV} disabled={processing}>
                 {processing ? 'Behandler...' : 'Generer CSV'}
             </button>
-        {/if}
-
-        {#if processing}
-            <!-- Progress bar -->
-            <div class="w-full bg-gray-200 rounded-full mt-4">
-                <div class="bg-blue-500 text-xs font-medium text-white text-center p-0.5 leading-none rounded-full" style="width: {progress}%">
-                    {progress.toFixed(0)}%
-                </div>
-            </div>
         {/if}
     </div>
 

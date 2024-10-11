@@ -8,8 +8,6 @@ const openai = new OpenAI();
 export async function POST({ request }) {
     const { description } = await request.json();
     
-    console.log('Modtager beskrivelse:', description);
-
     try {
         const response = await openai.chat.completions.create({
             model: "gpt-4o",  // Skift modelnavn, hvis nødvendigt
@@ -21,16 +19,13 @@ export async function POST({ request }) {
 
 {{Pointe 3}}
 
-Fås i størrelser fra {{xx}} til {{xx}} 
-` },
+Fås i størrelser fra {{xx}} til {{xx}}` },
                 { role: "user", content: description }
             ]
         });
 
         const aiMessage = response.choices[0].message.content;
         
-        console.log('Svar fra OpenAI:', aiMessage);
-
         return new Response(JSON.stringify({ reply: aiMessage }), {
             headers: { 'Content-Type': 'application/json' }
         });
