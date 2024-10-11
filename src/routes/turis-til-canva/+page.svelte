@@ -10,7 +10,8 @@
     let showProcessButton = false;
     let statusMessage = 'Upload CSV-fil fra Turis';
     let progress = 0;
-    let processing = false; // Angiver om vi er i gang med at behandle
+    let processing = false;
+    let skuImageList = []; // Opret en tom liste til SKU'er og billeder
 
     const excludedHeaders = [
         'Name', 'Brand', 'Supplier', 'SKU', 'Warehouse Location', 'EAN', 'Style Number',
@@ -87,8 +88,9 @@
 
         let filteredRows = [];
         let processedRows = [];
-        processing = true; // Start behandlingsprocessen
-        progress = 0; // Sæt progress til 0
+        skuImageList = []; // Tøm listen før ny behandling
+        processing = true;
+        progress = 0;
 
         // Trin 1: Filtrer alle rækker, der opfylder kriterierne
         for (let i = 0; i < rows.length; i++) {
@@ -101,7 +103,6 @@
                 priceValue = formatPrice(priceValue);
                 uniqueVariants.add(variantValue);
 
-                // Push de nødvendige data til filtreret array
                 filteredRows.push({
                     Name: row['Name'],
                     Brand: row['Brand'],
@@ -110,18 +111,19 @@
                     Description: row['Description'],
                     Images: row['Images']
                 });
-            }
 
-            // Opdater progress efter filtrering
-            // progress = ((i + 1) / rows.length) * 50; // Filtrering udgør 50% af processen
+                // Tilføj SKU og første billede til skuImageList
+                skuImageList.push({
+                    sku: row['SKU'],
+                    image: handleImages(row['Images'])
+                });
+            }
         }
 
-        // Trin 2: Behandl titler og beskrivelser efter filtreringen
         for (let i = 0; i < filteredRows.length; i++) {
             statusMessage = `Behandler beskrivelse ${i + 1} ud af ${filteredRows.length}`;
             let row = filteredRows[i];
 
-            // Behandl beskrivelsen med ChatGPT, vent på svaret
             const processedDescription = await handleDescription(row.Description);
 
             const processedRow = {
@@ -129,25 +131,23 @@
                 Brand: row.Brand,
                 SKU: row.SKU,
                 Price: row.Price,
-                Description: processedDescription, // ChatGPT's svar
+                Description: processedDescription,
                 Images: handleImages(row.Images)
             };
 
             processedRows.push(processedRow);
 
-            // Opdater progress efter behandling af titler og beskrivelser
-            progress = ((i + 1) / filteredRows.length) * 100; // Behandling af titler udgør de resterende 50%
+            progress = ((i + 1) / filteredRows.length) * 100;
         }
 
-        // Når alle rækker er behandlet, download CSV
         downloadCSV(processedRows);
-        processing = false; // Slut behandlingsprocessen
+        processing = false;
         statusMessage = 'Filtreret CSV-fil er nu klar til download!';
     }
 
     function handleImages(images) {
         const imageArray = images.split('|');
-        return imageArray[0];
+        return imageArray[0]; // Returnér det første billede
     }
 
     function handleTitles(title) {
@@ -207,7 +207,6 @@
         
         {#if processing}
 
-        <!-- Progress bar -->
         <div class="my-4">
             <p class="italic">Chatter med ChatGPT...</p>
             <div class="w-full bg-gray-200 rounded-full">
@@ -218,12 +217,35 @@
         </div>
         {/if}
 
-        <!-- Generer CSV knap -->
         {#if showDropdown}
             <button class="w-full bg-red-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-red-600" on:click={processCSV} disabled={processing}>
                 {processing ? 'Behandler...' : 'Generer CSV'}
             </button>
         {/if}
+
+        {#if skuImageList.length > 0}
+    <div class="mt-6">
+        <h2 class="text-lg font-semibold mb-3">Liste over SKU'er og billeder:</h2>
+        <ul class="space-y-2">
+            {#each skuImageList as { sku, image }}
+                <li class="flex items-center justify-between bg-gray-100 p-3 rounded-md">
+                    <div>
+                        <p>
+                            <span class="font-semibold">SKU:</span> {sku}<br>
+                            <a href="{image}" target="_blank" class="text-blue-500 underline ml-2">Se billede</a>
+                        </p>
+                    </div>
+                    <button
+                        class="bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600"
+                        on:click={() => navigator.clipboard.writeText(image)}>
+                        Kopier link
+                    </button>
+                </li>
+            {/each}
+        </ul>
+    </div>
+{/if}
+
     </div>
 
     <p id="statusMessage" class="text-center mt-5">{statusMessage}</p>
