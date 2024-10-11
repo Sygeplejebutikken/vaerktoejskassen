@@ -2,13 +2,19 @@ if (process.env.NODE_ENV !== 'production') {
     await import('dotenv').then(dotenv => dotenv.config());
 }
 
-import { OpenAI } from 'openai';
-const openai = new OpenAI();
+async function getOpenAIClient() {
+    if (!openai) {
+        const { OpenAI } = await import('openai');  // Dynamic import
+        openai = new OpenAI();
+    }
+    return openai;
+}
 
 export async function POST({ request }) {
     const { description } = await request.json();
     
     try {
+        const openaiClient = await getOpenAIClient();
         const response = await openai.chat.completions.create({
             model: "gpt-4o",  // Skift modelnavn, hvis nødvendigt
             messages: [
